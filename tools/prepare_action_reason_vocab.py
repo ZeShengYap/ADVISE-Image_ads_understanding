@@ -21,14 +21,19 @@ def _create_vocab(sentences, min_count=2):
   """
   vocab = {}
   for sentence in sentences:
+    #print(sentence)
+    #print(tokenize(sentence))
     for word in tokenize(sentence):
       vocab[word] = vocab.get(word, 0) + 1
 
-  print >> sys.stderr, 'Number of words: %i.' %(len(vocab))
+  #print >> sys.stderr, 'Number of words: %i.' %(len(vocab))
+  print(f'Number of words: {len(vocab)}.')
   for k in vocab.keys():
+    #print(k, vocab[k], vocab[k] < min_count)
     if vocab[k] < min_count:
       del vocab[k]
-  print >> sys.stderr, 'Number of words after pruning: %i.' % (len(vocab))
+  #print >> sys.stderr, 'Number of words after pruning: %i.' % (len(vocab))
+  print(f'Number of words after pruning: {len(vocab)}.')
   return vocab
 
 
@@ -45,8 +50,9 @@ def _check_coverage(vocab, sentences):
       if not word in vocab:
         uncover += 1
         break
-  print >> sys.stderr, 'Vocab coverage: %.4lf' % ( 
-      1.0 - 1.0 * uncover / len(sentences))
+  print(f'Vocab coverage: {1.0 - 1.0 * uncover / len(sentences)}')
+  #print >> sys.stderr, 'Vocab coverage: %.4lf' % ( 
+  #    1.0 - 1.0 * uncover / len(sentences))
 
 
 def _save_and_index_vocab(vocab, output_vocab_path):
@@ -59,7 +65,8 @@ def _save_and_index_vocab(vocab, output_vocab_path):
   Returns:
     index: a mapping from word to id.
   """
-  vocab = sorted(vocab.iteritems(), lambda x, y: -cmp(x[1], y[1]))
+  #print(vocab)
+  vocab = sorted(vocab.items(), key= lambda x: x[1])
   index = {}
   with open(output_vocab_path, 'w') as fp:
     for idx, (k, v) in enumerate(vocab):
@@ -72,24 +79,28 @@ def main(args):
   """Main."""
   # Load dataset.
   annots = load_action_reason_annots(args.action_reason_annot_path)
-  print >> sys.stderr, 'Load annotations for %i images.' % (len(annots))
+  #print(annots)
+  #print(f'Load annotations for {len(annots)} images.')
+  #print >> sys.stderr, 'Load annotations for %i images.' % (len(annots))
 
   # Create corpus.
   sentences = []
   count = {}
-  for _, annot in annots.iteritems():
+  for _, annot in annots.items():
     for stmt in annot['pos_examples']:
       sentences.append(stmt)
-  print >> sys.stderr, 'Build a corpus with %i sentences.' % (len(sentences))
+  #print >> sys.stderr, 'Build a corpus with %i sentences.' % (len(sentences))
+  print(f'Build a corpus with {len(sentences)} sentences.')
 
   # Generate vocabulary.
   word_and_freq = _create_vocab(sentences, args.min_count)
 
   _check_coverage(word_and_freq, sentences)
   _save_and_index_vocab(word_and_freq, args.output_vocab_path)
-  print >> sys.stderr, 'Vocab saved to %s' % (args.output_vocab_path)
-
-  print >> sys.stderr, 'Done'
+  #print >> sys.stderr, 'Vocab saved to %s' % (args.output_vocab_path)
+  print(f'Vocab saved to {args.output_vocab_path}')
+  print('Done')
+  #print >> sys.stderr, 'Done'
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -107,8 +118,8 @@ if __name__ == "__main__":
   args = parser.parse_args()
   assert os.path.isfile(args.action_reason_annot_path)
 
-  print >> sys.stderr, 'parsed input parameters:'
-  print >> sys.stderr, json.dumps(vars(args), indent=2)
+  #print >> sys.stderr, 'parsed input parameters:'
+  #print >> sys.stderr, json.dumps(vars(args), indent=2)
 
   main(args)
 

@@ -3,24 +3,34 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import sys
 import random
+
+print(f'Current path is {os.getcwd()}')
 
 import numpy as np
 import tensorflow as tf
 
-from tensorflow import app
-from tensorflow import flags
-from tensorflow import logging
 
-from google.protobuf import text_format
 from sklearn.metrics import average_precision_score
 
-from readers.utils import load_raw_annots
+from tensorflow.python.platform import app
+from tensorflow.python.platform import flags
+from tensorflow.compat.v1 import logging
+
+from google.protobuf import text_format
+
+#from models import mlp
+
+from readers.utils import load_action_reason_annots
 from readers.utils import load_symbol_cluster
+from readers.utils import load_symbol_raw_annots
 
 from utils import mlp
 from utils import train_utils
+
+
 
 from protos import mlp_pb2
 

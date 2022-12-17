@@ -4,7 +4,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-
+import re
 import tensorflow as tf
 from tensorflow import logging
 
@@ -171,6 +171,6 @@ def get_latest_model(saved_ckpts_dir):
     raise ValueError('No checkpoint was found in %s.' % (saved_ckpts_dir))
 
   ckpt_fn = lambda x: int(re.findall('ckpt-(\d+).meta', x)[0])
-  model_path = sorted(path_list, lambda x, y: -cmp(ckpt_fn(x), ckpt_fn(y)))[0]
+  model_path = sorted(path_list, key=lambda x:ckpt_fn(x))[0]
   model_path = model_path[:-5]
   return model_path

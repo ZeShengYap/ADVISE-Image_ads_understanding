@@ -45,7 +45,7 @@ model {
     stmt_encoder {
       bow_encoder {
         scope: "stmt_encoder"
-        vocab_size: 25333
+        vocab_size: 25331
         embedding_size: 200
         init_width: 0.08
         weight_decay: 1e-8

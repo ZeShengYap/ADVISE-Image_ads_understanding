@@ -8,7 +8,8 @@ from protos import text_encoders_pb2
 from text_encoders.bow_encoder import BOWEncoder
 from text_encoders.rnn_encoder import RNNEncoder
 from text_encoders.bi_rnn_encoder import BiRNNEncoder
-
+from text_encoders.roberta_encoder import RoBERTaEncoder
+from text_encoders.bert_encoder import BERTEncoder
 
 def build(config, is_training=False):
   """Build a text encoder from config.
@@ -33,5 +34,9 @@ def build(config, is_training=False):
     return RNNEncoder(config.rnn_encoder, is_training)
   if 'bi_rnn_encoder' == encoder:
     return BiRNNEncoder(config.bi_rnn_encoder, is_training)
+  if 'roberta_encoder' == encoder:
+    return RoBERTaEncoder(config.roberta_encoder, is_training)
+  if 'bert_encoder' == encoder:
+    return BERTEncoder(config.bert_encoder, is_training)
 
   raise ValueError('Invalid text encoder %s.' % (encoder))

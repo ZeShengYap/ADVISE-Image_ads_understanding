@@ -23,11 +23,11 @@ def _create_vocab(sentences, min_count=2):
     for word in tokenize(sentence):
       vocab[word] = vocab.get(word, 0) + 1
 
-  print >> sys.stderr, 'Number of words: %i.' %(len(vocab))
+  #print >> sys.stderr, 'Number of words: %i.' %(len(vocab))
   for k in vocab.keys():
     if vocab[k] < min_count:
       del vocab[k]
-  print >> sys.stderr, 'Number of words after pruning: %i.' % (len(vocab))
+  #print >> sys.stderr, 'Number of words after pruning: %i.' % (len(vocab))
   return vocab
 
 
@@ -44,8 +44,8 @@ def _check_coverage(vocab, sentences):
       if not word in vocab:
         uncover += 1
         break
-  print >> sys.stderr, 'Vocab coverage: %.4lf' % ( 
-      1.0 - 1.0 * uncover / len(sentences))
+  #print >> sys.stderr, 'Vocab coverage: %.4lf' % ( 
+  #    1.0 - 1.0 * uncover / len(sentences))
 
 
 def _save_and_index_vocab(vocab, output_vocab_path):
@@ -58,7 +58,7 @@ def _save_and_index_vocab(vocab, output_vocab_path):
   Returns:
     index: a mapping from word to id.
   """
-  vocab = sorted(vocab.iteritems(), lambda x, y: -cmp(x[1], y[1]))
+  vocab = sorted(vocab.items(), key=lambda x:x[1])
   index = {}
   with open(output_vocab_path, 'w') as fp:
     for idx, (k, v) in enumerate(vocab):
@@ -72,24 +72,24 @@ def main(args):
   # Load dataset.
   with open(args.densecap_annot_path, 'r') as fp:
     annots = json.loads(fp.read())
-  print >> sys.stderr, 'Load annotations for %i images.' % (len(annots))
+  #print >> sys.stderr, 'Load annotations for %i images.' % (len(annots))
 
   # Create corpus.
   sentences = []
   count = {}
-  for _, annot in annots.iteritems():
+  for _, annot in annots.items():
     for region in annot['regions']:
       sentences.append(region['name'])
-  print >> sys.stderr, 'Build a corpus with %i sentences.' % (len(sentences))
+  #print >> sys.stderr, 'Build a corpus with %i sentences.' % (len(sentences))
 
   # Generate vocabulary.
   word_and_freq = _create_vocab(sentences, args.min_count)
 
   _check_coverage(word_and_freq, sentences)
   _save_and_index_vocab(word_and_freq, args.output_vocab_path)
-  print >> sys.stderr, 'Vocab saved to %s' % (args.output_vocab_path)
-
-  print >> sys.stderr, 'Done'
+  #print >> sys.stderr, 'Vocab saved to %s' % (args.output_vocab_path)
+  print('Done preparing densecap vocab')
+  #print >> sys.stderr, 'Done'
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -107,8 +107,8 @@ if __name__ == "__main__":
   args = parser.parse_args()
   assert os.path.isfile(args.densecap_annot_path)
 
-  print >> sys.stderr, 'parsed input parameters:'
-  print >> sys.stderr, json.dumps(vars(args), indent=2)
+  #print >> sys.stderr, 'parsed input parameters:'
+  #print >> sys.stderr, json.dumps(vars(args), indent=2)
 
   main(args)
 

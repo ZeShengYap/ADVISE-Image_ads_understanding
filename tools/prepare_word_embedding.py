@@ -20,7 +20,7 @@ def _load_vocab(filename):
     for line in fp.readlines():
       word, freq = line.strip('\n').split('\t')
       vocab.append((word, int(freq)))
-  print >> sys.stderr, 'Load %i words from %s.' % (len(vocab), filename)
+  #print >> sys.stderr, 'Load %i words from %s.' % (len(vocab), filename)
   return vocab
 
 
@@ -37,18 +37,24 @@ def _load_data(filename):
     lines = fp.readlines()
 
   # Get the number of words and embedding size.
+  print("number of words", len(lines))
   num_words = len(lines)
   embedding_size = len(lines[0].strip('\n').split()) - 1
+  print("emebdding size", embedding_size)
 
   word2vec = {}
   for line_index, line in enumerate(lines):
     items = line.strip('\n').split()
-    word, vec = items[0], map(float, items[1:])
-    assert len(vec) == embedding_size
-
+    #print("item", line_index, line, items[0], items[1:])
+    word, vec = items[0], list(map(float, items[1:]))
+    assert len(list(vec)) == embedding_size
+    
     word2vec[word] = np.array(vec)
     if line_index % 10000== 0:
-      print >> sys.stderr, 'On load %s/%s' % (line_index, len(lines))
+      print('On load %s/%s' % (line_index, len(lines)))
+      #print("item", line_index, line, items[0], items[1:])  
+    #print >> sys.stderr, 'On load %s/%s' % (line_index, len(lines))
+  #print(word2vec)
   return word2vec
 
 
@@ -61,8 +67,13 @@ def _export_data(word2vec, vocab, filename_emb, filename_vocab, min_tf=10):
     filename_emb: the name of output embedding file.
     filename_vocab: the name of output vocab file.
   """
+  a = word2vec['the']
+  #print(list(a))
+  #print(len(list(a)))
+  #print(a.size)
   dims = word2vec['the'].shape[0]
-
+  #print(dims)
+  #dims = 200
   # 0 - UNK.
   vecs, words = [], []
   vecs.append(args.init_width * (np.random.rand(dims) * 2 - 1))
@@ -74,23 +85,24 @@ def _export_data(word2vec, vocab, filename_emb, filename_vocab, min_tf=10):
     elif freq >= min_tf:
       count += 1
       vec = args.init_width * (np.random.rand(dims) * 2 - 1)
-      print >> sys.stderr, 'Unknown word: %s, freq=%i.' % (word, freq)
+      #print >> sys.stderr, 'Unknown word: %s, freq=%i.' % (word, freq)
     else:
       continue
-
+    #print(vec)
     vecs.append(vec)
     words.append(word)
   vecs = np.stack(vecs, axis=0)
-
+  
+  #print(vecs)
   with open(filename_emb, 'wb') as fp:
     np.save(fp, vecs)
 
   with open(filename_vocab, 'w') as fp:
     fp.write('\n'.join(words))
 
-  print >> sys.stderr, 'Shape of word2vec:', vecs.shape
-  print >> sys.stderr, 'Unknown words: %i/%i(%.2lf%%).' % (
-      count, len(words), count * 100.0 / len(words))
+  #print >> sys.stderr, 'Shape of word2vec:', vecs.shape
+  #print >> sys.stderr, 'Unknown words: %i/%i(%.2lf%%).' % (
+  #    count, len(words), count * 100.0 / len(words))
 
 
 def main(args):
@@ -132,10 +144,10 @@ if __name__ == "__main__":
   assert os.path.isfile(args.vocab_path)
   assert os.path.isfile(args.data_path)
 
-  print >> sys.stderr, 'parsed input parameters:'
-  print >> sys.stderr, json.dumps(vars(args), indent=2)
+  #print >> sys.stderr, 'parsed input parameters:'
+  #print >> sys.stderr, json.dumps(vars(args), indent=2)
 
   main(args)
-
-  print >> sys.stderr, 'Done'
+  print('Done preparing word embedding')
+  #print >> sys.stderr, 'Done'
   exit(0)

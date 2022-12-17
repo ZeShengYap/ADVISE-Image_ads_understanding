@@ -13,6 +13,7 @@ from protos import advise_model_pb2
 from text_encoders import builder
 from utils import mlp
 from readers.utils import load_symbol_cluster
+from losses.mmloss import MMILB, CPC
 
 from models.image_stmt_model import triplet_loss_wrap_func
 
@@ -44,6 +45,7 @@ class Model(image_stmt_model.Model):
           model_proto.symbol_encoder, is_training)
 
     self._mining_fn = triplet_loss.build_mining_func(model_proto.triplet_mining)
+    self._mi_tv = MMILB(x_size=200, y_size=200, mid_activation='relu', last_activation='tanh')
 
   def get_variables_to_train(self):
     """Returns model variables.
@@ -186,6 +188,7 @@ class Model(image_stmt_model.Model):
       text_attention: a [batch, max_text_len] tf.float32 tensor, output of
         the softmax. 
     """
+    #print(text_strings)
     (text_encoded, _, _) = encoder.encode(text_strings, text_lengths)
     self._init_fn_list.append(encoder.get_init_fn())
     return text_encoded, None
@@ -207,6 +210,9 @@ class Model(image_stmt_model.Model):
     Raises:
       ValueError: if model_proto is not properly configured.
     """
+    #print(examples)
+    #print(self._stmt_encoder)  
+ 
     model_proto = self._model_proto
     is_training = self._is_training
 
@@ -221,6 +227,13 @@ class Model(image_stmt_model.Model):
        text_strings=examples['statement_strings'], 
        text_lengths=examples['statement_lengths'],
        encoder=self._stmt_encoder)
+
+    #in_mi = [stmt_encoded, img_encoded]
+    #lld_tv, tv_pn, H_tv = self._mi_tv(in_mi)
+    #tf.summary.scalar('losses/mutual_info_loss', 0.02 * lld_tv)
+    #print(f'shape of lld_tv is {lld_tv.shape}')
+    #tf.losses.add_loss(lld_tv * 0.02)
+
 
     # For optional constraints.
     if model_proto.densecap_loss_weight > 0:  
@@ -259,7 +272,7 @@ class Model(image_stmt_model.Model):
       weights = symbol_proba * symbol_classifier_weights
 
       word_to_id, id_to_symbol = load_symbol_cluster(model_proto.symbol_cluster_path)
-      for symbol_id, symbol_name in id_to_symbol.iteritems():
+      for symbol_id, symbol_name in id_to_symbol.items():
         if symbol_id != 0:
           tf.summary.scalar(
               'confidence/{}'.format(symbol_name), 
@@ -302,6 +315,9 @@ class Model(image_stmt_model.Model):
     Raises:
       ValueError: if model_proto is not properly configured.
     """
+    #print(examples['image_id'])
+    #print(self._stmt_encoder)
+
     model_proto = self._model_proto
     is_training = self._is_training
 
@@ -327,6 +343,7 @@ class Model(image_stmt_model.Model):
        text_lengths=statement_lengths_reshaped,
        encoder=self._stmt_encoder)
 
+    print(model_proto.symbol_loss_weight)
     if model_proto.symbol_loss_weight > 0:
       # For symbol constraint.
       (symbol_encoded, symbol_attention
@@ -394,6 +411,9 @@ class Model(image_stmt_model.Model):
     image_id = predictions['image_id']
     img_encoded = predictions['img_encoded']
     stmt_encoded = predictions['stmt_encoded']
+    #print(img_encoded)
+    #print(stmt_encoded)
+
 
     # Compute the triplet loss.
     margin = model_proto.triplet_margin
@@ -423,11 +443,17 @@ class Model(image_stmt_model.Model):
     loss_stmt_img, summary = triplet_loss_wrap_func(
         stmt_encoded, img_encoded, distance_fn, mining_fn, refine_fn, margin,
         'stmt_img')
+ 
+    in_mi = [stmt_encoded, img_encoded]
+    lld_tv, tv_pn, H_tv = self._mi_tv(in_mi)
+    tf.summary.scalar('losses/mutual_info_loss', 0.02 * lld_tv)
 
     loss_dict = {
       'triplet_img_stmt': loss_img_stmt,
       'triplet_stmt_img': loss_stmt_img,
+      'mi_loss_tv': lld_tv * 0.02
     }
+
 
     # For optional constraints.
     if model_proto.densecap_loss_weight > 0:

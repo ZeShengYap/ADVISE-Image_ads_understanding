@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -8,9 +7,9 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from tensorflow import app
-from tensorflow import flags
-from tensorflow import logging
+from tensorflow.python.platform import app
+from tensorflow.python.platform import flags
+from tensorflow.compat.v1 import logging
 
 from google.protobuf import text_format
 
@@ -58,7 +57,7 @@ def load_pipeline_proto(filename):
 
 
 def main(_):
-  logging.set_verbosity(tf.logging.INFO)
+  logging.set_verbosity(tf.compat.v1.logging.INFO)
 
   assert os.path.isfile(FLAGS.pipeline_proto)
 
@@ -94,7 +93,7 @@ def main(_):
         restore_init_fn(sess)
 
     # Loss and optimizer.
-    for loss_name, loss_tensor in loss_dict.iteritems():
+    for loss_name, loss_tensor in loss_dict.items():
       tf.losses.add_loss(loss_tensor)
       tf.summary.scalar('losses/{}'.format(loss_name), loss_tensor)
     total_loss = tf.losses.get_total_loss()
@@ -152,5 +151,7 @@ def main(_):
 
   logging.info('Done')
 
+
 if __name__ == '__main__':
+  #tf.compat.v1.enable_eager_execution()
   app.run()

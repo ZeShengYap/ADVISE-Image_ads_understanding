@@ -14,10 +14,10 @@ def main(args):
   """Main."""
   # Load dataset.
   annots = load_action_reason_annots(args.action_reason_annot_path)
-  print >> sys.stderr, 'Load annotations for %i images.' % (len(annots))
+  #print >> sys.stderr, 'Load annotations for %i images.' % (len(annots))
 
   densecap_annots = load_densecap_raw_annots(args.densecap_raw_annot_path)
-  print >> sys.stderr, 'Load densecap annotations for %i images.' % (len(densecap_annots))
+  #print >> sys.stderr, 'Load densecap annotations for %i images.' % (len(densecap_annots))
 
   examples = {}
   for image_id in annots:
@@ -43,9 +43,10 @@ def main(args):
   # Write to output json file.
   with open(args.output_json_path, 'w') as fp:
     fp.write(json.dumps(examples))
-  print >> sys.stderr, 'Wrote %i records to %s.' % (
-      len(examples), args.output_json_path)
-  print >> sys.stderr, 'Done'
+  #print >> sys.stderr, 'Wrote %i records to %s.' % (
+  #    len(examples), args.output_json_path)
+  #print >> sys.stderr, 'Done'
+  print('Done Parsing Densecap Data')
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -65,8 +66,8 @@ if __name__ == "__main__":
   args = parser.parse_args()
   assert os.path.isfile(args.action_reason_annot_path)
 
-  print >> sys.stderr, 'parsed input parameters:'
-  print >> sys.stderr, json.dumps(vars(args), indent=2)
+  #print >> sys.stderr, 'parsed input parameters:'
+  #print >> sys.stderr, json.dumps(vars(args), indent=2)
 
   main(args)
 

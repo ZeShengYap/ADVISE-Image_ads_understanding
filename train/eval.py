@@ -10,9 +10,9 @@ import nltk
 import numpy as np
 import tensorflow as tf
 
-from tensorflow import app
-from tensorflow import flags
-from tensorflow import logging
+from tensorflow.python.platform import app
+from tensorflow.python.platform import flags
+from tensorflow.compat.v1 import logging
 
 from google.protobuf import text_format
 
@@ -100,7 +100,9 @@ def export_inference(results, groundtruths, filename):
     filename: the path to the output json file.
   """
   final_results = {}
-  for image_id, result in results.iteritems():
+  for image_id, result in results.items():
+    #print(type(image_id), type(result))
+    image_id = image_id.decode('utf-8')
     pred = np.array(result['distances']).argmin()
     final_results[image_id] = groundtruths[image_id]['all_examples'][pred]
 
@@ -120,18 +122,24 @@ def evaluate_once(sess, writer, global_step, predictions, groundtruths):
   # Loop through the evaluation dataset.
   results = {}
   try:
+    #i = 0
     while True:
       pred_vals = sess.run(predictions)
+      #logging.info(f'pred_vals is {pred_vals}')
       for image_id, distances in zip(
           pred_vals['image_id'], pred_vals['distance']):
-
+      
+        #logging.info(f'length of distances is {len(list(distances))}')     
         results[image_id] = {
-          'distances': map(lambda x: round(x, 5), distances.tolist()),
+          'distances': list(map(lambda x: round(x, 5), list(distances))),
         }
+        #logging.info(f'results[image_id] is {len(results[image_id]["distances"])}')
+        #logging.info(f'{i}th image done')
+        #i += 1
 
   except tf.errors.OutOfRangeError:
     logging.info('Done evaluating -- epoch limit reached')
-
+ 
   if not FLAGS.continuous_evaluation:
     export_inference(results, groundtruths, FLAGS.final_results_path)
     return None
@@ -142,7 +150,7 @@ def evaluate_once(sess, writer, global_step, predictions, groundtruths):
 
   if writer is not None:
     summary = tf.Summary()
-    for k, v in metrics.iteritems():
+    for k, v in metrics.items():
       summary.value.add(tag='metrics/{}'.format(k), simple_value=v)
     writer.add_summary(summary, global_step=global_step)
 
@@ -150,8 +158,9 @@ def evaluate_once(sess, writer, global_step, predictions, groundtruths):
   return metrics['accuracy']
 
 def main(_):
-  logging.set_verbosity(tf.logging.INFO)
+  logging.set_verbosity(tf.compat.v1.logging.INFO)
 
+  print(FLAGS.pipeline_proto)
   assert os.path.isfile(FLAGS.pipeline_proto)
   assert os.path.isfile(FLAGS.action_reason_annot_path)
 
@@ -243,11 +252,13 @@ def main(_):
               summary = tf.Summary()
               summary.value.add(tag='metrics/model_metric', simple_value=metric_best)
               writer.add_summary(summary, global_step=step)
+
             writer.flush()
 
         # with tf.Session
       # if model_path is not None
     except Exception as ex:
+      logging.info(ex)
       pass
 
     if step >= eval_config.number_of_steps:
@@ -262,4 +273,5 @@ def main(_):
   logging.info('Done')
 
 if __name__ == '__main__':
+  #tf.enable_eager_execution()
   app.run()

@@ -15,14 +15,17 @@ def main(args):
   """Main."""
   # Load symbol annotations.
   symbol_annots = load_symbol_raw_annots(args.symbol_raw_annot_path)
-  print >> sys.stderr, 'Load symbol annotations for %i images.' % (len(symbol_annots))
+  #print >> sys.stderr, 'Load symbol annotations for %i images.' % (len(symbol_annots))
+  print(f'Load symbol annotations for {len(symbol_annots)} images.')
 
   word_to_id, id_to_symbol = load_symbol_cluster(args.symbol_cluster_path)
-  print >> sys.stderr, 'Load %i pairs of mapping.' % (len(word_to_id))
-  print >> sys.stderr, 'Symbol list: \n%s' % (json.dumps(id_to_symbol, indent=2))
+  #print >> sys.stderr, 'Load %i pairs of mapping.' % (len(word_to_id))
+  #print >> sys.stderr, 'Symbol list: \n%s' % (json.dumps(id_to_symbol, indent=2))
+  print(f'Load {len(word_to_id)} pairs of mapping.')
+  print(f'Symbol list: \n{json.dumps(id_to_symbol, indent=2)}')
 
   results = {}
-  for image_id, annots in symbol_annots.iteritems():
+  for image_id, annots in symbol_annots.items():
     symbol_set = set()
     for annot in annots:
       symbols = [s.strip() for s in annot[4].lower().split('/') if len(s.strip()) > 0]
@@ -33,8 +36,10 @@ def main(args):
     
   with open(args.output_json_path, 'w') as fp:
     fp.write(json.dumps(results))
-  print >> sys.stderr, 'Export %i symbols' % (len(results))
-  print >> sys.stderr, 'Done'
+  #print >> sys.stderr, 'Export %i symbols' % (len(results))
+  #print >> sys.stderr, 'Done'
+  print(f'Export {len(results)} symbols')
+  print('Done')
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -55,8 +60,10 @@ if __name__ == "__main__":
   assert os.path.isfile(args.symbol_raw_annot_path)
   assert os.path.isfile(args.symbol_cluster_path)
 
-  print >> sys.stderr, 'parsed input parameters:'
-  print >> sys.stderr, json.dumps(vars(args), indent=2)
+  #print >> sys.stderr, 'parsed input parameters:'
+  #print >> sys.stderr, json.dumps(vars(args), indent=2)
+  print('parsed input parameters:')
+  print(json.dumps(vars(args), indent=2))
 
   main(args)
 

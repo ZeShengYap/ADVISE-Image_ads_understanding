@@ -41,8 +41,8 @@ def model(model_proto, input_data, is_training=False):
       hidden_hyperparams = hyperparams_builder.build(
           model_proto.hidden_hyperparams, is_training=is_training)
 
-      with slim.arg_scope(hidden_hyperparams):
-        for i in xrange(model_proto.hidden_layers):
+      with slim.arg_scope(hidden_hyperparams()):
+        for i in range(model_proto.hidden_layers):
           node = slim.fully_connected(node, 
               num_outputs=model_proto.hidden_units, 
               scope='hidden_%d' % (i))
@@ -51,7 +51,7 @@ def model(model_proto, input_data, is_training=False):
               is_training=is_training)
 
     # Build output layer.
-    with slim.arg_scope(output_hyperparams):
+    with slim.arg_scope(output_hyperparams()):
       node = slim.fully_connected(node, 
           num_outputs=model_proto.output_units, 
           scope='project')

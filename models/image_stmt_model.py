@@ -116,7 +116,7 @@ def triplet_loss_wrap_func(
       alpha=margin)
 
   if tag is not None:
-    for k, v in summary.iteritems():
+    for k, v in summary.items():
       tf.summary.scalar('triplet_train/{}_{}'.format(tag, k), v)
 
   return loss, summary

@@ -64,7 +64,7 @@ def encode_feature(features, config, is_training=False, reuse=None):
   node = features
   node = slim.dropout(node, config.input_dropout_keep_prob, 
       is_training=is_training)
-  with slim.arg_scope(hp):
+  with slim.arg_scope(hp()):
     node = slim.fully_connected(node, config.num_outputs, 
         scope=config.scope, reuse=reuse)
   node = slim.dropout(node, config.output_dropout_keep_prob,

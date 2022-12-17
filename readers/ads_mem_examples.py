@@ -1,4 +1,5 @@
 
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -65,53 +66,53 @@ def _get_data_placeholders(config, split):
   # Create placeholders.
   data_placeholders = {
     'image_id': 
-      tf.placeholder(tf.string, [None]),
+      tf.placeholder(tf.string, [None], name="image_id"),
     'img_features': 
-      tf.placeholder(tf.float32, [None, config.feature_dimensions]),
+      tf.placeholder(tf.float32, [None, config.feature_dimensions], name="image_features"),
     'roi_features': 
       tf.placeholder(tf.float32, [None, 
-          config.number_of_regions, config.feature_dimensions]),
+          config.number_of_regions, config.feature_dimensions], name="roi_features"),
     'number_of_statements':
-      tf.placeholder(tf.int32, [None]),
+      tf.placeholder(tf.int32, [None], name="number_of_statements"),
     'statement_strings': 
       tf.placeholder(tf.int32, [None, 
-          config.max_stmts_per_image, config.max_stmt_len]),
+          config.max_stmts_per_image, config.max_stmt_len], name="statement_strings"),
     'statement_lengths': 
-      tf.placeholder(tf.int32, [None, config.max_stmts_per_image]),
+      tf.placeholder(tf.int32, [None, config.max_stmts_per_image], name="statement_lengths"),
     'number_of_symbols':
-      tf.placeholder(tf.int32, [None]),
+      tf.placeholder(tf.int32, [None], name="number_of_symbols"),
     'symbols':
-      tf.placeholder(tf.int32, [None, config.max_symbols_per_image]),
+      tf.placeholder(tf.int32, [None, config.max_symbols_per_image], name="symbols"),
   }
   if not config.use_single_densecap:
     data_placeholders.update({ 
         'number_of_densecaps':
-          tf.placeholder(tf.int32, [None]),
+          tf.placeholder(tf.int32, [None], name="number_of_densecaps"),
         'densecap_strings': 
           tf.placeholder(tf.int32, [None, 
-              config.max_densecaps_per_image, config.max_densecap_len]),
+              config.max_densecaps_per_image, config.max_densecap_len], name="densecap_strings"),
         'densecap_lengths': 
           tf.placeholder(tf.int32, [None, 
-            config.max_densecaps_per_image]), 
+            config.max_densecaps_per_image], name="densecap_lengths"), 
         })
   else:
     data_placeholders.update({ 
         'number_of_densecaps':
-          tf.placeholder(tf.int32, [None]),
+          tf.placeholder(tf.int32, [None], name="number_of_densecaps"),
         'densecap_strings': 
           tf.placeholder(tf.int32, [None, 
-              1, config.max_densecaps_per_image * config.max_densecap_len]),
+              1, config.max_densecaps_per_image * config.max_densecap_len], name="densecap_strings"),
         'densecap_lengths': 
-          tf.placeholder(tf.int32, [None, 1]), 
+          tf.placeholder(tf.int32, [None, 1], name="densecap_lengths"), 
         })
 
   if split != 'train':
     data_placeholders.update({
       'eval_statement_strings': 
         tf.placeholder(tf.int32, [None, 
-            config.number_of_val_stmts_per_image, config.max_stmt_len]),
+            config.number_of_val_stmts_per_image, config.max_stmt_len], name="eval_statement_strings"),
       'eval_statement_lengths': 
-        tf.placeholder(tf.int32, [None, config.number_of_val_stmts_per_image]),
+        tf.placeholder(tf.int32, [None, config.number_of_val_stmts_per_image], name="eval_statement_lengths"),
       })
 
   # Load annotations and image features.
@@ -126,8 +127,8 @@ def _get_data_placeholders(config, split):
 
   # Image features.
   start = time.time()
-  image_features = np.load(config.image_feature_path).item()
-  region_features = np.load(config.region_feature_path).item()
+  image_features = np.load(config.image_feature_path, allow_pickle=True).item()
+  region_features = np.load(config.region_feature_path, allow_pickle=True).item()
   logging.info('Image features are loaded, cost=%is, img_len=%i, roi_len=%i.', 
       time.time() - start, len(image_features), len(region_features))
 
@@ -182,7 +183,7 @@ def _get_data_placeholders(config, split):
   total_images = total_statements = 0
 
   # Split training data for validation purpose.
-  stmt_annots = stmt_annots.items()
+  stmt_annots = list(stmt_annots.items())
   if split == 'valid':
     stmt_annots = stmt_annots[:config.number_of_val_examples]
   elif split == 'train':
@@ -263,9 +264,19 @@ def _get_data_placeholders(config, split):
 
   # Legacy: GPU or CPU mode.
   if config.data_provider_mode == ads_mem_examples_pb2.AdsMemExamples.FROM_CPU:
-    for k, v in feed_dict.items():
+    keys = list(feed_dict.keys())
+    length = len(feed_dict.keys())
+    for i in range(length):
+      k = keys[i]
+      v = feed_dict[k]
       feed_dict[data_placeholders[k]] = np.stack(v)
       del feed_dict[k]
+
+    #for k, v in feed_dict.items():
+    #  print(data_placeholders[k])
+    #  feed_dict[data_placeholders[k]] = np.stack(v)
+    #  del feed_dict[k]
+    #  print(feed_dict.keys())
     return data_placeholders, feed_dict
 
 #  elif config.data_provider_mode == ads_mem_examples_pb2.AdsMemExamples.FROM_GPU:
@@ -347,5 +358,7 @@ def get_examples(config, split='train'):
     """
     logging.info('Initializing iterator...')
     sess.run(iterator.initializer, feed_dict=feed_dict)
-
+  
+  #print(next_element)
+  #return False
   return next_element, _init_fn

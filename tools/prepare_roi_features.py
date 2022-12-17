@@ -110,7 +110,7 @@ def main(_):
     init_fn(sess)
     assert len(sess.run(uninitialized_variable_names)) == 0
 
-    for index, (image_id, example) in enumerate(examples.iteritems()):
+    for index, (image_id, example) in enumerate(examples.items()):
       if index % 50 == 0:
         logging.info('On image %i/%i', index, len(examples))
 

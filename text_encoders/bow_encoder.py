@@ -11,7 +11,8 @@ from protos import text_encoders_pb2
 from text_encoders.text_encoder import TextEncoder
 
 slim = tf.contrib.slim
-
+#tf.enable_eager_execution()
+#from tensorflow.keras.backend import eval
 
 class BOWEncoder(TextEncoder):
 
@@ -108,4 +109,5 @@ class BOWEncoder(TextEncoder):
         tf.matmul(tf.expand_dims(weights, 1), embeddings), [1])
 
     self._set_init_fn(embedding_weights, model_proto.init_emb_matrix_path)
+    #return False
     return text_encoded, embeddings, embeddings

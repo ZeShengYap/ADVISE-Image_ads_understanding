@@ -6,10 +6,12 @@ import cv2
 import json
 import numpy as np
 import tensorflow as tf
+#import tensorflow.compat.v1 as tf
 
-from tensorflow import app
-from tensorflow import flags
-from tensorflow import logging
+
+from tensorflow.python.platform import app
+from tensorflow.python.platform import flags
+from tensorflow.compat.v1 import logging
 from slim.nets import nets_factory
 
 from utils.train_utils import default_session_config
@@ -90,7 +92,7 @@ def main(_):
     assert len(sess.run(uninitialized_variable_names)) == 0
 
     image_ids, batch = [], []
-    for index, (image_id, example) in enumerate(examples.iteritems()):
+    for index, (image_id, example) in enumerate(examples.items()):
 
       # Process the current batch.
       if index % FLAGS.batch_size == 0:

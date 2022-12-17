@@ -5,8 +5,11 @@ message TextEncoder {
     BOWEncoder bow_encoder = 1;
     RNNEncoder rnn_encoder = 2;
     BiRNNEncoder bi_rnn_encoder = 3;
+    RoBERTaEncoder roberta_encoder = 4;
+    BERTEncoder bert_encoder = 5;
   }
 }
+
 
 message BOWEncoder {
   // Variable scope.
@@ -136,4 +139,70 @@ message BiRNNEncoder {
     USE_AVERAGE = 2;
   }
   optional ReprMethod repr_method = 16 [ default = USE_AVERAGE ];
+}
+
+message RoBERTaEncoder{
+  // Variable scope.
+  optional string scope = 1 [ default = 'roberta_encoder' ];
+  // Vocabulary size.
+  optional int32 vocab_size = 2;
+
+  // Dimensions of the embedding vector.
+  optional int32 embedding_size = 3 [ default = 200 ];
+
+  // Init width of word embedding.
+  optional float init_width = 4 [ default = 0.08 ];
+
+  // Embedding weights: weight decay.
+  optional float weight_decay = 5 [ default = 0.0 ];
+
+  // File to initialize word embedding matrix from.
+  optional string init_emb_matrix_path = 6 [ default = "" ];
+
+  // Dropout keep probability of the word embedding.
+  optional float dropout_keep_prob = 7 [ default = 1.0 ];
+
+  // If true, train word embedding.
+  optional bool trainable = 8 [ default = true ];
+
+  // BOW: the method using to compute the final representation.
+  enum ReprMethod {
+    USE_OUTPUT_AVG = 1;
+    USE_OUTPUT_SUM = 2;
+  }
+  optional ReprMethod repr_method = 16 [ default = USE_OUTPUT_SUM ];
+
+}
+
+message BERTEncoder {
+  // Variable scope.
+  optional string scope = 1 [ default = 'bert_encoder' ];
+
+  // Vocabulary size.
+  optional int32 vocab_size = 2;
+
+  // Dimensions of the embedding vector.
+  optional int32 embedding_size = 3 [ default = 200 ];
+
+  // Init width of word embedding.
+  optional float init_width = 4 [ default = 0.08 ];
+
+  // Embedding weights: weight decay.
+  optional float weight_decay = 5 [ default = 0.0 ];
+
+  // File to initialize word embedding matrix from.
+  optional string init_emb_matrix_path = 6 [ default = "" ];
+
+  // Dropout keep probability of the word embedding.
+  optional float dropout_keep_prob = 7 [ default = 1.0 ];
+
+  // If true, train word embedding.
+  optional bool trainable = 8 [ default = true ];
+
+  // BOW: the method using to compute the final representation.
+  enum ReprMethod {
+    USE_OUTPUT_AVG = 1;
+    USE_OUTPUT_SUM = 2;
+  }
+  optional ReprMethod repr_method = 16 [ default = USE_OUTPUT_AVG ];
 }

@@ -14,16 +14,16 @@ from readers.utils import load_symbol_raw_annots
 def main(args):
   """Main."""
   word_to_id, id_to_symbol = load_symbol_cluster(args.symbol_cluster_path)
-  print >> sys.stderr, 'Load %i pairs of mapping.' % (len(word_to_id))
-  print >> sys.stderr, 'Symbol list: \n%s' % (json.dumps(id_to_symbol, indent=2))
+  #print >> sys.stderr, 'Load %i pairs of mapping.' % (len(word_to_id))
+  #print >> sys.stderr, 'Symbol list: \n%s' % (json.dumps(id_to_symbol, indent=2))
 
-  id_to_symbol = sorted(id_to_symbol.iteritems(), lambda x, y: cmp(x[0], y[0]))
+  id_to_symbol = sorted(id_to_symbol.items(), key=lambda x: x[1])
   with open(args.output_vocab_path, 'w') as fp:
     for symbol_id, symbol in id_to_symbol:
       if symbol_id != 0:
         fp.write('%s\t%i\n' % (symbol, 999))
-
-  print >> sys.stderr, 'Done'
+  print('Done preparing symbol list')
+  #print >> sys.stderr, 'Done'
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
@@ -39,8 +39,8 @@ if __name__ == "__main__":
   args = parser.parse_args()
   assert os.path.isfile(args.symbol_cluster_path)
 
-  print >> sys.stderr, 'parsed input parameters:'
-  print >> sys.stderr, json.dumps(vars(args), indent=2)
+  #print >> sys.stderr, 'parsed input parameters:'
+  #print >> sys.stderr, json.dumps(vars(args), indent=2)
 
   main(args)
 
