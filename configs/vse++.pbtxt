@@ -1,5 +1,5 @@
 example_reader {
-  batch_size: 128
+  batch_size: 64
   feature_dimensions: 1536
   max_stmts_per_image: 5
   max_stmt_len: 30

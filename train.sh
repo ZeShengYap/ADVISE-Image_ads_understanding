@@ -3,10 +3,11 @@
 #SBATCH --account=za99
 #SBATCH --job-name=ADVISE
 #SBATCH --time=168:00:00
-#SBATCH --mem=36G
+#SBATCH --mem=64G
 #SBATCH --gres=gpu:1
 #SBATCH --partition=m3g
 #SBATCH --output=ADVISE.%j.out
+#SBATCH --constraint=V100-32G
 
 module load anaconda/2019.03-Python3.7-gcc5
 source activate /scratch/za99/jchu0050/conda_envs/joEnv
@@ -21,15 +22,18 @@ mkdir -p "saved_results"
 # Train for only 10,000 steps. 
 # The results we put in the challenge trained for 200,000 steps.
 
-#number_of_steps=200000
-number_of_steps=10000
+number_of_steps=200000
+#number_of_steps=10000
+#number_of_steps=50000
 
 #name="vse++"
-name="advise.densecap_0.1.symbol_0.1"
+#name="vse++_768d"
+#name="advise.densecap_0.1.symbol_0.1"
 #name="advise.kb"
-#name="advise.densecap_0.1.symbol_0_768d.1"
+name="advise.densecap_0.1.symbol_0_768d.1"
+#name="advise.kb_768d"
 
-ender="mi_loss"
+ender="adagrad_mi_rob_0.01_abs_5000p_350g"
 
 export CUDA_VISIBLE_DEVICES=0
 python3 "train/train.py" \

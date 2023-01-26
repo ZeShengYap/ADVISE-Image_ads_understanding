@@ -45,7 +45,7 @@ class Model(image_stmt_model.Model):
           model_proto.symbol_encoder, is_training)
 
     self._mining_fn = triplet_loss.build_mining_func(model_proto.triplet_mining)
-    self._mi_tv = MMILB(x_size=200, y_size=200, mid_activation='relu', last_activation='tanh')
+    self._mi_tv = MMILB(x_size=768, y_size=768, mid_activation='relu', last_activation='tanh')
 
   def get_variables_to_train(self):
     """Returns model variables.
@@ -378,20 +378,23 @@ class Model(image_stmt_model.Model):
 
     # Joint embedding and cosine distance computation.
     img_encoded = tf.nn.l2_normalize(img_encoded, 1)
-    stmt_encoded = tf.nn.l2_normalize(stmt_encoded, 1)
+    stmt_encoded_o = tf.nn.l2_normalize(stmt_encoded, 1)
+    
     stmt_encoded = tf.reshape(
         stmt_encoded, 
-        [-1, number_of_val_stmts_per_image, stmt_encoded.get_shape()[-1].value])
+        [-1, number_of_val_stmts_per_image, stmt_encoded_o.get_shape()[-1].value])
 
     distance = 1 - tf.reduce_sum(tf.multiply(tf.expand_dims(img_encoded, 1), stmt_encoded), axis=2)
     predictions = {
       'image_id': image_id,
       'distance': distance,
+      'img_encoded': img_encoded,
+      'stmt_encoded': stmt_encoded_o
     }
     return predictions
 
 
-  def build_loss(self, predictions, **kwargs):
+  def build_loss(self, predictions, is_training=True, **kwargs):
     """Build tensorflow graph for computing loss.
 
     Args:
@@ -446,17 +449,21 @@ class Model(image_stmt_model.Model):
  
     in_mi = [stmt_encoded, img_encoded]
     lld_tv, tv_pn, H_tv = self._mi_tv(in_mi)
-    tf.summary.scalar('losses/mutual_info_loss', 0.02 * lld_tv)
+    tf.summary.scalar('losses/mutual_info_loss', abs(0.01 * lld_tv))
 
     loss_dict = {
       'triplet_img_stmt': loss_img_stmt,
       'triplet_stmt_img': loss_stmt_img,
-      'mi_loss_tv': lld_tv * 0.02
+      'mi_loss_tv': abs(lld_tv * 0.01)
     }
 
+    #loss_dict = {
+    #  'triplet_img_stmt': loss_img_stmt,
+    #  'triplet_stmt_img': loss_stmt_img,
+    #}
 
     # For optional constraints.
-    if model_proto.densecap_loss_weight > 0:
+    if model_proto.densecap_loss_weight > 0 and is_training:
       dense_encoded = predictions['dense_encoded']
       loss_dense_img, summary = triplet_loss_wrap_func(
           dense_encoded, img_encoded, distance_fn, mining_fn, refine_fn, margin,
@@ -469,7 +476,7 @@ class Model(image_stmt_model.Model):
         'triplet_dense_stmt': loss_dense_stmt * model_proto.densecap_loss_weight,
       })
 
-    if model_proto.symbol_loss_weight > 0:
+    if model_proto.symbol_loss_weight > 0 and is_training:
       number_of_symbols = predictions['number_of_symbols']
       symb_encoded = predictions['symb_encoded']
 

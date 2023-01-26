@@ -92,12 +92,37 @@ def main(_):
       if FLAGS.restore_from:
         restore_init_fn(sess)
 
+    def train_step_fn(sess, train_op, global_step, train_step_kwargs):
+      """
+      slim.learning.train_step():
+      train_step_kwargs = {summary_writer:, should_log:, should_stop:}
+      """
+      if hasattr(train_step_fn, 'step'):
+        train_step_fn.step += 1  # or use global_step.eval(session=sess)
+      else:
+        train_step_fn.step = global_step.eval(sess)
+
+      # calc training losses
+      total_loss, should_stop = slim.learning.train_step(sess, train_op, global_step, train_step_kwargs)
+      mi_lo = tf.losses.get_losses(loss_collection = 'mi_loss')
+
+      # add after x steps
+      if (train_step_fn.step >= 5000) and (train_step_fn.step % 350 == 0):
+        total_loss = total_loss + mi_lo
+
+      return [total_loss, should_stop]
+
+
     # Loss and optimizer.
     for loss_name, loss_tensor in loss_dict.items():
-      tf.losses.add_loss(loss_tensor)
+      if loss_name == 'mi_loss_tv':
+        tf.losses.add_loss(loss_tensor, loss_collection = 'mi_loss')
+      else:
+        tf.losses.add_loss(loss_tensor)
       tf.summary.scalar('losses/{}'.format(loss_name), loss_tensor)
-    total_loss = tf.losses.get_total_loss()
-    tf.summary.scalar('losses/total_loss', total_loss)
+    total_ori_loss = tf.losses.get_total_loss()
+    tf.summary.scalar('losses/total_ori_loss', total_ori_loss)
+    #total_loss = total_ori_loss + mi_ls
 
     for reg_loss in tf.losses.get_regularization_losses():
       name = 'losses/reg_loss_{}'.format(reg_loss.op.name.split('/')[0])
@@ -115,7 +140,7 @@ def main(_):
     logging.info('=' * 128)
     for var in variables_to_train:
       logging.info(var)
-    train_op = slim.learning.create_train_op(total_loss,
+    train_op = slim.learning.create_train_op(total_ori_loss,
         variables_to_train=variables_to_train, 
         clip_gradient_norm=0.0,
         gradient_multipliers=gradient_multipliers,
@@ -140,6 +165,7 @@ def main(_):
       graph=g,
       master='',
       is_chief=True,
+      train_step_fn=train_step_fn,
       number_of_steps=train_config.number_of_steps,
       log_every_n_steps=train_config.log_every_n_steps,
       save_interval_secs=train_config.save_interval_secs,

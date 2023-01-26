@@ -11,6 +11,7 @@ from models import model
 from models import utils
 from losses import triplet_loss
 from text_encoders import builder
+from losses.mmloss import MMILB, CPC
 
 slim = tf.contrib.slim
 
@@ -26,6 +27,7 @@ class Model(model.Model):
       is_training: if True, training graph would be built.
     """
     super(Model, self).__init__(model_proto, is_training)
+    self._mi_tv = MMILB(x_size=768, y_size=768, mid_activation='relu', last_activation='tanh')
 
   def build_loss(self, predictions, **kwargs):
     """Build tensorflow graph for computing loss.
@@ -76,9 +78,14 @@ class Model(model.Model):
         stmt_encoded, img_encoded, distance_fn, mining_fn, refine_fn, margin,
         'stmt_img')
 
+    in_mi = [stmt_encoded, img_encoded]
+    lld_tv, tv_pn, H_tv = self._mi_tv(in_mi)
+    tf.summary.scalar('losses/mutual_info_loss', 0.02 * lld_tv)
+
     loss_dict = {
       'triplet_img_stmt': loss_img_stmt,
       'triplet_stmt_img': loss_stmt_img,
+      'mi_loss_tv': lld_tv * 0.02
     }
 
     return loss_dict

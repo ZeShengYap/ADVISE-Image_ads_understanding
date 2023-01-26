@@ -185,6 +185,17 @@ def main(_):
 
     model = builder.build(pipeline_proto.model, is_training=False)
     predictions = model.build_evaluation_graph(examples)
+    #if split == 'valid':
+    #  logging.info('=' * 128)
+    #  logging.info('VALIDATION SET')
+    #  logging.info('=' * 128)
+    #  loss_dict = model.build_loss(predictions, is_training=False)
+    #  for loss_name, loss_tensor in loss_dict.items():
+    #    tf.losses.add_loss(loss_tensor)
+    #    tf.summary.scalar('val_losses/{}'.format(loss_name), loss_tensor)
+    #  total_loss = tf.losses.get_total_loss()
+    #  tf.summary.scalar('val_losses/total_loss', total_loss)
+
 
     init_fn = model.get_init_fn()
     uninitialized_variable_names = tf.report_uninitialized_variables()
@@ -244,7 +255,6 @@ def main(_):
             # Evaluate the latest model.
             prev_step = step
             metric = evaluate_once(sess, writer, step, predictions, groundtruths)
-
             step_best, metric_best = train_utils.save_model_if_it_is_better(
                 step, metric, model_path, FLAGS.saved_ckpt_dir, reverse=False)
 
