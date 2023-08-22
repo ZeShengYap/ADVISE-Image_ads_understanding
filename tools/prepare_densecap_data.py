@@ -6,6 +6,11 @@ import string
 import argparse
 
 import nltk
+
+# path = 'path to ADVISE'
+# os.chdir(path)
+# sys.path.append(path)
+
 from readers.utils import load_action_reason_annots
 from readers.utils import load_densecap_raw_annots
 
