@@ -4,13 +4,25 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import re
+
 import tensorflow as tf
-from tensorflow import logging
+# from tensorflow import logging
+import logging
+
+import inspect
+import os
+import sys
+
+# path = 'path to ADVISE'
+# # os.chdir(path)
+# # sys.path.append(path)
 
 from protos import train_config_pb2
 
-slim = tf.contrib.slim
+import re
+
+# slim = tf.contrib.slim
+slim = tf.keras.layers
 
 
 def build_multipler(config):
@@ -92,7 +104,7 @@ def default_session_config(per_process_gpu_memory_fraction=1.0):
   Returns:
     config: The default config proto for tf.Session.
   """
-  config = tf.ConfigProto()
+  config = tf.compat.v1.ConfigProto()
   config.allow_soft_placement = True
   config.gpu_options.allow_growth = True
   #config.log_device_placement = True
@@ -171,6 +183,8 @@ def get_latest_model(saved_ckpts_dir):
     raise ValueError('No checkpoint was found in %s.' % (saved_ckpts_dir))
 
   ckpt_fn = lambda x: int(re.findall('ckpt-(\d+).meta', x)[0])
-  model_path = sorted(path_list, key=lambda x:ckpt_fn(x))[0]
+  # model_path = sorted(path_list, lambda x, y: -cmp(ckpt_fn(x), ckpt_fn(y)))[0]
+  model_path = sorted(path_list, key=lambda x: -ckpt_fn(x))[0]
+  
   model_path = model_path[:-5]
   return model_path
