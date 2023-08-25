@@ -3,9 +3,10 @@ import json
 import string
 
 import nltk
+nltk.download('punkt')
 
 _printable = set(string.printable)
-_convert_to_printable = lambda caption: "".join(list(filter(lambda x: x in _printable, caption)))
+_convert_to_printable = lambda caption: filter(lambda x: x in _printable, caption)
 
 tokenize = lambda x: nltk.word_tokenize(x.lower().replace('<unk>', 'TEXT'))
 
@@ -38,9 +39,8 @@ def load_action_reason_annots(filename):
     data = json.loads(fp.read())
 
   annots = {}
+  # for image_id, examples in data.iteritems():
   for image_id, examples in data.items():
-    #print(image_id)
-    #print(examples)
     if len(examples) == 2:
       pos_examples, all_examples = examples
     elif len(examples) == 15:
@@ -53,7 +53,6 @@ def load_action_reason_annots(filename):
       'pos_examples': [_convert_to_printable(x) for x in pos_examples],
       'all_examples': [_convert_to_printable(x) for x in all_examples],
     }
-  #print(annots)
   return annots
 
 
@@ -70,6 +69,7 @@ def load_densecap_annots(filename, max_densecaps_per_image=10):
     data = json.loads(fp.read())
 
   annots = {}
+  # for image_id, annot in data.iteritems():
   for image_id, annot in data.items():
     annots[image_id] = [region['name'] for region \
                        in annot['regions'][:max_densecaps_per_image]]
